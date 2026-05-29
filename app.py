@@ -1,6 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
-from google.generativeai.types import Tool, GoogleSearch
+from google import genai
+from google.genai import types
 import random
 
 # ── Page config ───────────────────────────────────────────────────────────────
@@ -97,21 +97,24 @@ if st.session_state.pending_url:
     st.session_state.pending_url = None
 
     try:
-        genai.configure(api_key=api_key)
+        client = genai.Client(api_key=api_key)
 
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
+        grounding_tool = types.Tool(
+            google_search=types.GoogleSearch()
+        )
+
+        config = types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
-            tools=[Tool(google_search=GoogleSearch())],
+            tools=[grounding_tool],
+            temperature=0.3,
+            max_output_tokens=2048,
         )
 
         with st.spinner("🌐 Visitando la página y analizando contenido..."):
-            response = model.generate_content(
-                ANALYSIS_PROMPT.format(url=url),
-                generation_config=genai.GenerationConfig(
-                    temperature=0.3,
-                    max_output_tokens=2048,
-                ),
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=ANALYSIS_PROMPT.format(url=url),
+                config=config,
             )
 
         result_text = response.text
