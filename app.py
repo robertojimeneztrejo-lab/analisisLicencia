@@ -63,7 +63,14 @@ st.markdown(
 st.divider()
 
 # ── API Key — solo desde secrets ──────────────────────────────────────────────
-api_key = st.secrets["GEMINI_API_KEY"]
+api_key = st.secrets.get("GEMINI_API_KEY", None)
+if not api_key:
+    st.error(
+        "⚠️ Falta configurar el secret **GEMINI_API_KEY** en Streamlit Cloud.\n\n"
+        "Ve a **Manage app → Settings → Secrets** y agrega:\n\n"
+        "```toml\nGEMINI_API_KEY = \"AIza...\"\n```"
+    )
+    st.stop()
 
 # ── Input ─────────────────────────────────────────────────────────────────────
 url_input = st.text_input(
