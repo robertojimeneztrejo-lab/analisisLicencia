@@ -119,7 +119,7 @@ if st.session_state.pending_url:
 
         with st.spinner("🌐 Visitando la página y analizando contenido..."):
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.0-flash-001",
                 contents=ANALYSIS_PROMPT.format(url=url),
                 config=config,
             )
