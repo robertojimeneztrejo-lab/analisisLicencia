@@ -150,7 +150,7 @@ if st.session_state.pending_url:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown(
-    "<small style='color: #999;'>Powered by Gemini 2.0 Flash + Google Search · "
+    "<small style='color: #999;'>Powered by Gemini 2.5 Flash + Google Search · "
     "Desplegado en Streamlit Cloud</small>",
     unsafe_allow_html=True,
 )
