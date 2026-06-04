@@ -24,7 +24,8 @@ st.markdown("""
         margin-bottom: 1rem;
         word-break: break-all;
     }
-    h1 { font-size: 1.7rem !important; }
+    h1 { font-size: 1.7rem !important; text-align: center; }
+    p { text-align: center; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -55,13 +56,17 @@ if "pending_url" not in st.session_state:
     st.session_state.pending_url = None
 
 # ── Header ────────────────────────────────────────────────────────────────────
-st.title(f"{st.session_state.page_icon} Analizador de Software Académico")
+st.markdown(
+    f"<div style='text-align:center; font-size: 72px; line-height: 1; margin-bottom: 8px;'>"
+    f"{st.session_state.page_icon}</div>",
+    unsafe_allow_html=True,
+)
+st.title("Analizador de Software Académico")
 st.markdown(
     "Pega el link de cualquier proveedor de software y obtén un reporte estructurado "
     "con licencias académicas, descripciones y carreras compatibles."
 )
 st.divider()
-
 # ── API Key — solo desde secrets ──────────────────────────────────────────────
 api_key = st.secrets.get("GEMINI_API_KEY", None)
 if not api_key:
@@ -150,7 +155,7 @@ if st.session_state.pending_url:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown(
-    "<small style='color: #999;'>Powered by Gemini 2.0 Flash + Google Search · "
+    "<small style='color: #999;'>Powered by Gemini 2.5 Flash + Google Search · "
     "Desplegado en Streamlit Cloud</small>",
     unsafe_allow_html=True,
 )
