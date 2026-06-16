@@ -210,6 +210,8 @@ if "page_icon" not in st.session_state:
     st.session_state.page_icon = "🎓"
 if "pending_job" not in st.session_state:
     st.session_state.pending_job = None  # dict: {type, url, nombre_software?}
+if "current_quote" not in st.session_state:
+    st.session_state.current_quote = random.choice(SPINNER_QUOTES)
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown(
@@ -223,10 +225,13 @@ st.markdown(
     "técnica completa de un software específico."
 )
 
-# Placeholder reservado para el spinner + frase mientras se ejecuta un análisis.
-# Se llena más abajo (cuando hay un pending_job) pero se renderiza aquí arriba,
-# justo debajo del subtítulo y antes de las pestañas.
-status_placeholder = st.container()
+# Frase persistente: se asigna una al cargar la página y se reemplaza con cada
+# nueva búsqueda, quedándose visible (no desaparece al terminar el análisis).
+st.markdown(
+    f"<p style='text-align:center; color:#888; font-size:14px; margin-top:-6px;'>"
+    f"💭 {st.session_state.current_quote}</p>",
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
@@ -259,9 +264,12 @@ def run_gemini(prompt_text):
     return response.text
 
 
-def rotate_icon():
-    current = st.session_state.page_icon
-    st.session_state.page_icon = random.choice([i for i in ICONS if i != current])
+def rotate_icon_and_quote():
+    current_icon = st.session_state.page_icon
+    st.session_state.page_icon = random.choice([i for i in ICONS if i != current_icon])
+
+    current_quote = st.session_state.current_quote
+    st.session_state.current_quote = random.choice([q for q in SPINNER_QUOTES if q != current_quote])
 
 
 def render_result(result_text, url, download_name):
@@ -307,7 +315,7 @@ with tab_software:
         elif not url.startswith(("http://", "https://")):
             st.error("❌ La URL debe comenzar con https:// o http://")
         else:
-            rotate_icon()
+            rotate_icon_and_quote()
             st.session_state.pending_job = {"type": "software", "url": url}
             st.rerun()
 
@@ -325,7 +333,7 @@ with tab_membresia:
         elif not url.startswith(("http://", "https://")):
             st.error("❌ La URL debe comenzar con https:// o http://")
         else:
-            rotate_icon()
+            rotate_icon_and_quote()
             st.session_state.pending_job = {"type": "membresia", "url": url}
             st.rerun()
 
@@ -351,7 +359,7 @@ with tab_ficha:
         elif not url.startswith(("http://", "https://")):
             st.error("❌ La URL debe comenzar con https:// o http://")
         else:
-            rotate_icon()
+            rotate_icon_and_quote()
             st.session_state.pending_job = {"type": "ficha", "url": url, "nombre_software": nombre}
             st.rerun()
 
@@ -367,19 +375,15 @@ if st.session_state.pending_job:
             "ficha": f"🌐 Generando ficha técnica de {job.get('nombre_software', '')}...",
         }
 
-        with status_placeholder:
-            quote_slot = st.empty()
-            quote_slot.caption(f"💭 {random.choice(SPINNER_QUOTES)}")
-            with st.spinner(ACTION_TEXT[job["type"]]):
-                if job["type"] == "software":
-                    result_text = run_gemini(PROMPT_SOFTWARE.format(url=job["url"]))
-                elif job["type"] == "membresia":
-                    result_text = run_gemini(PROMPT_MEMBRESIA.format(url=job["url"]))
-                elif job["type"] == "ficha":
-                    result_text = run_gemini(
-                        PROMPT_FICHA_COMPLETA.format(url=job["url"], nombre_software=job["nombre_software"])
-                    )
-            quote_slot.empty()
+        with st.spinner(ACTION_TEXT[job["type"]]):
+            if job["type"] == "software":
+                result_text = run_gemini(PROMPT_SOFTWARE.format(url=job["url"]))
+            elif job["type"] == "membresia":
+                result_text = run_gemini(PROMPT_MEMBRESIA.format(url=job["url"]))
+            elif job["type"] == "ficha":
+                result_text = run_gemini(
+                    PROMPT_FICHA_COMPLETA.format(url=job["url"], nombre_software=job["nombre_software"])
+                )
 
         if job["type"] == "software":
             render_result(result_text, job["url"], "reporte_software.md")
