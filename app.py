@@ -5,7 +5,7 @@ import random
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Analizador de Software Académico",
+    page_title="Analizador de Software y Membresías Académicas",
     layout="centered",
 )
 
@@ -201,7 +201,7 @@ st.markdown(
     f"{st.session_state.page_icon}</div>",
     unsafe_allow_html=True,
 )
-st.title("Analizador de Software Académico")
+st.title("Analizador de Software y Membresías Académicas")
 st.markdown(
     "Analiza proveedores de software, asociaciones con membresías, o genera una ficha "
     "técnica completa de un software específico."
