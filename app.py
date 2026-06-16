@@ -64,65 +64,128 @@ Visita el enlace anterior, analiza su contenido (asumiendo que se trata de una a
 
 Presenta la información de forma muy visual, usando negritas y listas con viñetas para que sea fácil de escanear."""
 
-# Modo 3: Ficha completa (12 campos, estilo Arena Simulation)
-PROMPT_FICHA_COMPLETA = """Analiza la siguiente página web: {url}
+# Modo 3: Ficha completa (12 campos, estilo Arena Simulation) — con ejemplo few-shot
+PROMPT_FICHA_COMPLETA = """Eres un analista que llena fichas técnicas de software académico. Debes seguir EXACTAMENTE el mismo formato, nivel de detalle, extensión y estilo del EJEMPLO que te muestro abajo. No agregues encabezados nuevos, no cambies el orden, no resumas de más ni te extiendas de menos respecto al ejemplo.
 
-El software a analizar se llama: {nombre_software}
+═══════════════════════════════════════
+EJEMPLO DE FICHA CORRECTA (formato a imitar):
+═══════════════════════════════════════
 
-Visita el enlace anterior, investiga sobre "{nombre_software}" y genera una FICHA TÉCNICA COMPLETA con exactamente esta estructura y estos 12 campos (usa los mismos encabezados, en negritas):
+Nombre de Software
+Arena Simulation Software
 
-**Nombre de Software**
-(Nombre comercial)
+Desarrollador
+Rockwell Automation
 
-**Desarrollador**
-(Empresa o entidad que lo desarrolla)
+Tipo SW
+Software de simulación de eventos discretos (Discrete Event Simulation - DES)
 
-**Tipo SW**
-(Categoría del software, ej. simulación, diseño CAD, estadística, etc.)
+Tipo Licencia
+Licencia académica gratuita para estudiantes, docentes e investigadores; licencias profesionales y de investigación disponibles para instituciones y empresas.
 
-**Tipo Licencia**
-(Describe los tipos de licencia disponibles: académica, profesional, de investigación, etc.)
+Página web del desarrollador
+https://www.rockwellautomation.com/en-us/products/software/arena-simulation/buying-options/download.html
 
-**Página web del desarrollador**
-(URL oficial)
+Introducción
+Arena Simulation Software es una plataforma líder de simulación de eventos discretos utilizada para modelar, analizar y optimizar procesos complejos antes de implementarlos en el mundo real. Permite representar sistemas mediante diagramas de flujo visuales, ejecutar escenarios "What-if" y evaluar el impacto de cambios operativos sin riesgo para la organización. Es ampliamente utilizada en manufactura, logística, salud, minería, cadenas de suministro y operaciones empresariales.
 
-**Introducción**
-(Párrafo breve explicando qué es y para qué se usa)
+Gestión de la Herramienta
+* Instalación local en equipos Windows
+* Modelado visual mediante diagramas de flujo
+* Creación de simulaciones de eventos discretos
+* Gestión de recursos, colas y procesos
+* Ejecución de experimentos y escenarios alternativos
+* Generación de reportes estadísticos
+* Integración con Excel y bases de datos
+* Optimización de procesos mediante simulación avanzada
 
-**Gestión de la Herramienta**
-(Lista de funciones principales en viñetas)
+Duración del acceso
+* Versión académica disponible para uso educativo y de investigación
+* Licencias institucionales y de laboratorio disponibles para universidades
+* Versión de prueba gratuita disponible para estudiantes y académicos.
 
-**Duración del acceso**
-(Lista de las modalidades de acceso disponibles: prueba, académica, institucional, etc.)
+Método de Asignación
+* Registro mediante cuenta de Rockwell Automation
+* Descarga desde el Product Compatibility and Download Center
+* Licencia académica disponible para estudiantes, profesores e investigadores
+* Las universidades pueden adquirir paquetes de laboratorio con licencias concurrentes para múltiples usuarios
+* Licencia destinada exclusivamente a fines académicos y no comerciales.
 
-**Método de Asignación**
-(Lista de pasos o requisitos para obtener acceso/licencia)
+Uso individual o institucional
+Uso académico, institucional, investigación y empresarial.
 
-**Uso individual o institucional**
-(Indica para qué tipo de usuario está pensado)
+Versión del software o herramienta
+* Arena Professional Edition
+* Arena Academic Lab Package
+* Arena Research Edition
+* Arena Student Edition
+* OptQuest for Arena (optimización basada en simulación)
 
-**Versión del software o herramienta**
-(Lista de ediciones o versiones disponibles)
+Requisitos técnicos
+* Sistema Operativo: Windows 10/11
+* Compatible con Microsoft Office
+* Procesador multinúcleo recomendado
+* Memoria RAM ≥ 8 GB
+* Espacio libre para proyectos de simulación
+* Conexión a internet para descarga y activación.
 
-**Requisitos técnicos**
-(Lista de requisitos de sistema)
+Precio
+* Versión de prueba gratuita disponible
+* Student Edition gratuita para fines académicos
+* Academic Lab Package mediante licenciamiento institucional
+* Licencias profesionales disponibles para empresas.
 
-**Precio**
-(Lista de precios o condiciones de costo según edición)
+Contenido del Software
+* Simulación de eventos discretos
+* Modelado de procesos productivos
+* Simulación de cadenas de suministro
+* Gestión de colas y recursos
+* Simulación logística
+* Simulación de centros de atención (Call Centers)
+* Simulación de hospitales y sistemas de salud
+* Simulación minera y manufacturera
+* Optimización mediante OptQuest
+* Análisis estadístico de desempeño
+* Generación automática de reportes
+* Integración con Excel y bases de datos empresariales.
 
-**Contenido del Software**
-(Lista de capacidades/módulos principales)
+Detalles técnicos
+* Basado en tecnología SIMAN
+* Interfaz gráfica basada en diagramas de flujo
+* No requiere programación avanzada para construir modelos
+* Compatible con Visual Basic for Applications (VBA)
+* Integración con Microsoft Excel, Access y Visio
+* Capacidad para modelar sistemas complejos con miles de entidades
+* Utilizado por empresas como General Motors, Ford, UPS, IBM y Nike
+* Considerado uno de los estándares mundiales en simulación de eventos discretos.
 
-**Detalles técnicos**
-(Lista de aspectos técnicos relevantes: tecnología base, integraciones, compatibilidad, etc.)
+Programas formativos relacionados con la herramienta
+* Ingeniería Industrial
+* Logística y Cadena de Suministro
+* Administración de Operaciones
+* Investigación de Operaciones
+* Ingeniería Mecánica
+* Ingeniería de Manufactura
+* Gestión de Proyectos
+* Ingeniería de Procesos
+* Analítica de Negocios
+* Ciencia de Datos aplicada a Operaciones
+* MBA en Operaciones y Producción
+* Ingeniería en Transporte y Movilidad
 
-**Programas formativos relacionados con la herramienta**
-(Lista de licenciaturas/carreras que más se benefician)
+Contacto
+https://www.rockwellautomation.com/en-us/products/software/arena-simulation/buying-options/download.html
 
-**Contacto**
-(Email o link de contacto/descarga)
+═══════════════════════════════════════
+FIN DEL EJEMPLO. Ahora genera la ficha real:
+═══════════════════════════════════════
 
-Si algún dato no se encuentra disponible en la página o no lo puedes verificar, indica "No especificado" en ese campo. No omitas ningún encabezado."""
+Software a investigar: {nombre_software}
+URL de referencia: {url}
+
+Visita la URL, investiga sobre "{nombre_software}" y genera SU FICHA usando exactamente los mismos 17 encabezados que viste en el ejemplo, en el mismo orden, con el mismo estilo de redacción (listas con viñetas "*" donde el ejemplo usa viñetas, párrafo corrido donde el ejemplo usa párrafo, mismo nivel de detalle — ni más breve ni más largo). Usa negritas markdown (**Encabezado**) para cada título de campo, igual que en el ejemplo.
+
+Si para algún campo no encuentras información verificable en la página o por búsqueda, escribe "No especificado" en ese campo — nunca lo omitas y nunca inventes datos."""
 
 # ── Random icon ───────────────────────────────────────────────────────────────
 ICONS = ["🎓", "🔬", "📐", "🖥️", "📊", "🧪", "🏫", "📡", "🧬", "⚗️", "🛰️", "🔭", "📱", "🧮", "💡"]
