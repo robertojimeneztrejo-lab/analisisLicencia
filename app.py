@@ -30,13 +30,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Prompts ───────────────────────────────────────────────────────────────────
-SYSTEM_PROMPT = """Eres un analista experto en software académico.
+SYSTEM_PROMPT = """Eres un analista experto en software académico y membresías institucionales.
 Cuando el usuario te proporciona una URL, visitas esa página web y analizas su contenido en profundidad.
-Siempre respondes en español con formato Markdown claro y visual."""
+Siempre respondes en español con formato Markdown claro y visual, usando negritas y listas con viñetas."""
 
-ANALYSIS_PROMPT = """Analiza la siguiente página web: {url}
+# Modo 1: Software (proveedor de herramientas)
+PROMPT_SOFTWARE = """Analiza la siguiente página web: {url}
 
-Visita el enlace anterior, analiza su contenido y genera un reporte estructurado que identifique exactamente los siguientes 6 puntos:
+Visita el enlace anterior, analiza su contenido y genera un reporte estructurado en formato de FICHA TÉCNICA que identifique exactamente los siguientes 6 puntos:
 
 1. **Número de softwares que ofrece:** (Cantidad total de herramientas o programas independientes que se promocionan en el sitio).
 2. **Nombre de los softwares:** (Lista con los nombres comerciales de cada uno).
@@ -47,13 +48,89 @@ Visita el enlace anterior, analiza su contenido y genera un reporte estructurado
 
 Presenta la información de forma muy visual, usando negritas y listas con viñetas para que sea fácil de escanear."""
 
+# Modo 2: Membresía (asociación / organización)
+PROMPT_MEMBRESIA = """Analiza la siguiente página web: {url}
+
+Visita el enlace anterior, analiza su contenido (asumiendo que se trata de una asociación, organismo o institución que ofrece membresías) y genera un reporte estructurado en formato de FICHA TÉCNICA que identifique exactamente los siguientes puntos:
+
+1. **Nombre de la organización/asociación.**
+2. **Costo de la membresía:** (Indica el precio o rangos de precio según el tipo de membresía, en la moneda en que se publique).
+3. **¿Ofrece gratuidad en la membresía?:** (Indicar claramente si existe una opción 100% gratuita para estudiantes, académicos o instituciones. Si no se menciona, indicar "No especificado").
+4. **Link para solicitar la membresía:** (Extrae el enlace directo o la sección de la página donde se puede aplicar o registrar).
+5. **Tipos de membresía que ofrece:** (Ej. Institucional, Individual, Estudiantil/Student, Corporativa, etc. — lista todas las que encuentres).
+6. **Correo o link de contacto:** (Extrae el correo electrónico o el enlace a la página de contacto).
+7. **¿De qué trata la organización?:** (Breve descripción de su propósito y a qué público sirve).
+8. **Licenciaturas/áreas académicas relacionadas:** (Carreras o disciplinas que más se beneficiarían de esta membresía).
+
+Presenta la información de forma muy visual, usando negritas y listas con viñetas para que sea fácil de escanear."""
+
+# Modo 3: Ficha completa (12 campos, estilo Arena Simulation)
+PROMPT_FICHA_COMPLETA = """Analiza la siguiente página web: {url}
+
+El software a analizar se llama: {nombre_software}
+
+Visita el enlace anterior, investiga sobre "{nombre_software}" y genera una FICHA TÉCNICA COMPLETA con exactamente esta estructura y estos 12 campos (usa los mismos encabezados, en negritas):
+
+**Nombre de Software**
+(Nombre comercial)
+
+**Desarrollador**
+(Empresa o entidad que lo desarrolla)
+
+**Tipo SW**
+(Categoría del software, ej. simulación, diseño CAD, estadística, etc.)
+
+**Tipo Licencia**
+(Describe los tipos de licencia disponibles: académica, profesional, de investigación, etc.)
+
+**Página web del desarrollador**
+(URL oficial)
+
+**Introducción**
+(Párrafo breve explicando qué es y para qué se usa)
+
+**Gestión de la Herramienta**
+(Lista de funciones principales en viñetas)
+
+**Duración del acceso**
+(Lista de las modalidades de acceso disponibles: prueba, académica, institucional, etc.)
+
+**Método de Asignación**
+(Lista de pasos o requisitos para obtener acceso/licencia)
+
+**Uso individual o institucional**
+(Indica para qué tipo de usuario está pensado)
+
+**Versión del software o herramienta**
+(Lista de ediciones o versiones disponibles)
+
+**Requisitos técnicos**
+(Lista de requisitos de sistema)
+
+**Precio**
+(Lista de precios o condiciones de costo según edición)
+
+**Contenido del Software**
+(Lista de capacidades/módulos principales)
+
+**Detalles técnicos**
+(Lista de aspectos técnicos relevantes: tecnología base, integraciones, compatibilidad, etc.)
+
+**Programas formativos relacionados con la herramienta**
+(Lista de licenciaturas/carreras que más se benefician)
+
+**Contacto**
+(Email o link de contacto/descarga)
+
+Si algún dato no se encuentra disponible en la página o no lo puedes verificar, indica "No especificado" en ese campo. No omitas ningún encabezado."""
+
 # ── Random icon ───────────────────────────────────────────────────────────────
 ICONS = ["🎓", "🔬", "📐", "🖥️", "📊", "🧪", "🏫", "📡", "🧬", "⚗️", "🛰️", "🔭", "📱", "🧮", "💡"]
 
 if "page_icon" not in st.session_state:
     st.session_state.page_icon = "🎓"
-if "pending_url" not in st.session_state:
-    st.session_state.pending_url = None
+if "pending_job" not in st.session_state:
+    st.session_state.pending_job = None  # dict: {type, url, nombre_software?}
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown(
@@ -63,10 +140,11 @@ st.markdown(
 )
 st.title("Analizador de Software Académico")
 st.markdown(
-    "Pega el link de cualquier proveedor de software y obtén un reporte estructurado "
-    "con licencias académicas, descripciones y carreras compatibles."
+    "Analiza proveedores de software, asociaciones con membresías, o genera una ficha "
+    "técnica completa de un software específico."
 )
 st.divider()
+
 # ── API Key — solo desde secrets ──────────────────────────────────────────────
 api_key = st.secrets.get("GEMINI_API_KEY", None)
 if not api_key:
@@ -77,80 +155,146 @@ if not api_key:
     )
     st.stop()
 
-# ── Input ─────────────────────────────────────────────────────────────────────
-url_input = st.text_input(
-    "URL a analizar",
-    placeholder="https://www.mathworks.com  |  https://www.autodesk.com  |  https://www.esri.com",
-    label_visibility="collapsed",
-)
 
-col1, col2 = st.columns([3, 1])
-with col2:
-    analyze_btn = st.button("🔍 Analizar", use_container_width=True, type="primary")
+def run_gemini(prompt_text):
+    """Llama a Gemini con grounding de Google Search y devuelve el texto de respuesta."""
+    client = genai.Client(api_key=api_key)
+    grounding_tool = types.Tool(google_search=types.GoogleSearch())
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT,
+        tools=[grounding_tool],
+        temperature=0.3,
+        max_output_tokens=3000,
+    )
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt_text,
+        config=config,
+    )
+    return response.text
 
-# ── Al pulsar Analizar: validar, rotar ícono y guardar URL pendiente ──────────
-if analyze_btn:
-    url = url_input.strip()
-    if not url:
-        st.warning("⚠️ Por favor ingresa una URL válida.")
-        st.stop()
-    if not url.startswith(("http://", "https://")):
-        st.error("❌ La URL debe comenzar con https:// o http://")
-        st.stop()
 
+def rotate_icon():
     current = st.session_state.page_icon
     st.session_state.page_icon = random.choice([i for i in ICONS if i != current])
-    st.session_state.pending_url = url
-    st.rerun()
 
-# ── Ejecutar análisis si hay URL pendiente ────────────────────────────────────
-if st.session_state.pending_url:
-    url = st.session_state.pending_url
-    st.session_state.pending_url = None
+
+def render_result(result_text, url, download_name):
+    st.success("✅ Análisis completado")
+    st.markdown(f'<div class="url-badge">🔗 {url}</div>', unsafe_allow_html=True)
+    st.markdown(result_text)
+    st.divider()
+    st.download_button(
+        label="⬇️ Descargar reporte (.md)",
+        data=result_text,
+        file_name=download_name,
+        mime="text/markdown",
+        key=f"dl_{download_name}",
+    )
+
+
+def handle_error(e):
+    err = str(e)
+    if "API_KEY_INVALID" in err or "API key not valid" in err:
+        st.error("❌ API Key inválida. Verifica tu clave en [Google AI Studio](https://aistudio.google.com/app/apikey).")
+    elif "quota" in err.lower():
+        st.error("❌ Cuota de API excedida. Intenta más tarde o revisa tu plan en Google AI Studio.")
+    elif "404" in err and "NOT_FOUND" in err:
+        st.error("❌ El modelo de Gemini usado ya no está disponible. Contacta al desarrollador para actualizar el código.")
+    else:
+        st.error(f"❌ Error al analizar: {err}")
+
+
+# ── Tabs ──────────────────────────────────────────────────────────────────────
+tab_software, tab_membresia, tab_ficha = st.tabs(["💻 Software", "🪪 Membresía", "📋 Ficha completa"])
+
+# ── TAB 1: Software ───────────────────────────────────────────────────────────
+with tab_software:
+    url_sw = st.text_input(
+        "URL del proveedor de software",
+        placeholder="https://www.mathworks.com",
+        key="url_software",
+    )
+    if st.button("🔍 Analizar software", use_container_width=True, type="primary", key="btn_software"):
+        url = url_sw.strip()
+        if not url:
+            st.warning("⚠️ Por favor ingresa una URL válida.")
+        elif not url.startswith(("http://", "https://")):
+            st.error("❌ La URL debe comenzar con https:// o http://")
+        else:
+            rotate_icon()
+            st.session_state.pending_job = {"type": "software", "url": url}
+            st.rerun()
+
+# ── TAB 2: Membresía ───────────────────────────────────────────────────────────
+with tab_membresia:
+    url_mem = st.text_input(
+        "URL de la asociación u organización",
+        placeholder="https://www.ieee.org",
+        key="url_membresia",
+    )
+    if st.button("🔍 Analizar membresía", use_container_width=True, type="primary", key="btn_membresia"):
+        url = url_mem.strip()
+        if not url:
+            st.warning("⚠️ Por favor ingresa una URL válida.")
+        elif not url.startswith(("http://", "https://")):
+            st.error("❌ La URL debe comenzar con https:// o http://")
+        else:
+            rotate_icon()
+            st.session_state.pending_job = {"type": "membresia", "url": url}
+            st.rerun()
+
+# ── TAB 3: Ficha completa ──────────────────────────────────────────────────────
+with tab_ficha:
+    nombre_sw = st.text_input(
+        "Nombre del software",
+        placeholder="Arena Simulation Software",
+        key="nombre_ficha",
+    )
+    url_ficha = st.text_input(
+        "URL de referencia",
+        placeholder="https://www.rockwellautomation.com/...",
+        key="url_ficha",
+    )
+    if st.button("📋 Generar ficha completa", use_container_width=True, type="primary", key="btn_ficha"):
+        url = url_ficha.strip()
+        nombre = nombre_sw.strip()
+        if not nombre:
+            st.warning("⚠️ Por favor ingresa el nombre del software.")
+        elif not url:
+            st.warning("⚠️ Por favor ingresa una URL de referencia.")
+        elif not url.startswith(("http://", "https://")):
+            st.error("❌ La URL debe comenzar con https:// o http://")
+        else:
+            rotate_icon()
+            st.session_state.pending_job = {"type": "ficha", "url": url, "nombre_software": nombre}
+            st.rerun()
+
+# ── Ejecutar análisis si hay un trabajo pendiente ─────────────────────────────
+if st.session_state.pending_job:
+    job = st.session_state.pending_job
+    st.session_state.pending_job = None
 
     try:
-        client = genai.Client(api_key=api_key)
+        if job["type"] == "software":
+            with st.spinner("🌐 Visitando la página y analizando software..."):
+                result_text = run_gemini(PROMPT_SOFTWARE.format(url=job["url"]))
+            render_result(result_text, job["url"], "reporte_software.md")
 
-        grounding_tool = types.Tool(
-            google_search=types.GoogleSearch()
-        )
+        elif job["type"] == "membresia":
+            with st.spinner("🌐 Visitando la página y analizando membresía..."):
+                result_text = run_gemini(PROMPT_MEMBRESIA.format(url=job["url"]))
+            render_result(result_text, job["url"], "reporte_membresia.md")
 
-        config = types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            tools=[grounding_tool],
-            temperature=0.3,
-            max_output_tokens=2048,
-        )
-
-        with st.spinner("🌐 Visitando la página y analizando contenido..."):
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=ANALYSIS_PROMPT.format(url=url),
-                config=config,
-            )
-
-        result_text = response.text
-
-        st.success("✅ Análisis completado")
-        st.markdown(f'<div class="url-badge">🔗 {url}</div>', unsafe_allow_html=True)
-        st.markdown(result_text)
-        st.divider()
-
-        st.download_button(
-            label="⬇️ Descargar reporte (.md)",
-            data=result_text,
-            file_name="reporte_software_academico.md",
-            mime="text/markdown",
-        )
+        elif job["type"] == "ficha":
+            with st.spinner(f"🌐 Generando ficha técnica de {job['nombre_software']}..."):
+                result_text = run_gemini(
+                    PROMPT_FICHA_COMPLETA.format(url=job["url"], nombre_software=job["nombre_software"])
+                )
+            render_result(result_text, job["url"], f"ficha_{job['nombre_software'].replace(' ', '_')}.md")
 
     except Exception as e:
-        err = str(e)
-        if "API_KEY_INVALID" in err or "API key not valid" in err:
-            st.error("❌ API Key inválida. Verifica tu clave en [Google AI Studio](https://aistudio.google.com/app/apikey).")
-        elif "quota" in err.lower():
-            st.error("❌ Cuota de API excedida. Intenta más tarde o revisa tu plan en Google AI Studio.")
-        else:
-            st.error(f"❌ Error al analizar: {err}")
+        handle_error(e)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
