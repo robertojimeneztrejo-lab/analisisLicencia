@@ -274,7 +274,7 @@ SPINNER_QUOTES = [
     "La tecnología no resuelve problemas; las personas que la usan bien, sí.",
 ]
 
-if "page_icon" not in st.session_state:
+if "page_icon" not in st.session_state or st.session_state.page_icon not in SVG_ICONS:
     st.session_state.page_icon = "libro"
 if "pending_job" not in st.session_state:
     st.session_state.pending_job = None  # dict: {type, url, nombre_software?}
