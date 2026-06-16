@@ -187,8 +187,76 @@ Visita la URL, investiga sobre "{nombre_software}" y genera SU FICHA usando exac
 
 Si para algún campo no encuentras información verificable en la página o por búsqueda, escribe "No especificado" en ese campo — nunca lo omitas y nunca inventes datos."""
 
-# ── Random icon ───────────────────────────────────────────────────────────────
-ICONS = ["🎓", "🔬", "📐", "🖥️", "📊", "🧪", "🏫", "📡", "🧬", "⚗️", "🛰️", "🔭", "📱", "🧮", "💡"]
+# ── Iconos SVG personalizados (estilo lineal, color Streamlit) ──────────────
+ICON_COLOR = "#FF4B4B"
+
+SVG_ICONS = {
+    "cohete": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 4c8 6 12 16 12 28 0 6-2 12-4 16h-16c-2-4-4-10-4-16 0-12 4-22 12-28z"/>
+        <circle cx="32" cy="24" r="4"/>
+        <path d="M20 38l-8 14M44 38l8 14M26 48h12l2 10H24z"/>
+    </svg>''',
+    "robot": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="16" y="22" width="32" height="26" rx="6"/>
+        <circle cx="25" cy="34" r="3" fill="{ICON_COLOR}" stroke="none"/>
+        <circle cx="39" cy="34" r="3" fill="{ICON_COLOR}" stroke="none"/>
+        <path d="M24 42h16M32 22V12M24 12h16M10 30v8M54 30v8"/>
+    </svg>''',
+    "lupa": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="27" cy="27" r="16"/>
+        <path d="M39 39l14 14M20 27h14M27 20v14"/>
+    </svg>''',
+    "telescopio": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 20l38 14-4 10-38-14z"/>
+        <path d="M42 28l12-4M46 34l10 0"/>
+        <path d="M20 38l-6 18M28 41l-4 16"/>
+        <circle cx="12" cy="24" r="2" fill="{ICON_COLOR}" stroke="none"/>
+    </svg>''',
+    "adn": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 6c0 12 20 12 20 24s-20 12-20 24M42 6c0 12-20 12-20 24s20 12 20 24"/>
+        <path d="M23 16h18M21 26h22M21 38h22M23 48h18"/>
+    </svg>''',
+    "planeta": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="32" cy="32" r="14"/>
+        <ellipse cx="32" cy="32" rx="26" ry="8" transform="rotate(-20 32 32)"/>
+        <circle cx="26" cy="27" r="1.8" fill="{ICON_COLOR}" stroke="none"/>
+    </svg>''',
+    "foco": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 6a16 16 0 0 1 9 29c-2 1.5-3 3-3 5v2H26v-2c0-2-1-3.5-3-5A16 16 0 0 1 32 6z"/>
+        <path d="M26 50h12M28 56h8"/>
+        <path d="M32 16v8M24 24l4 4M40 24l-4 4"/>
+    </svg>''',
+    "brujula": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="32" cy="32" r="22"/>
+        <path d="M40 24l-6 14-12 6 6-14z" fill="{ICON_COLOR}" stroke="none"/>
+        <circle cx="32" cy="32" r="2" fill="white" stroke="none"/>
+    </svg>''',
+    "engranaje": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="{ICON_COLOR}" stroke="none">
+        <path fill-rule="evenodd" d="M36.2 8h-8.4l-1.4 7a18 18 0 0 0-4.7 2.7l-6.7-2.8-6 6.9 4.3 5.6a18 18 0 0 0 0 5.4l-4.3 5.6 6 6.9 6.7-2.8a18 18 0 0 0 4.7 2.7l1.4 7h8.4l1.4-7a18 18 0 0 0 4.7-2.7l6.7 2.8 6-6.9-4.3-5.6a18 18 0 0 0 0-5.4l4.3-5.6-6-6.9-6.7 2.8a18 18 0 0 0-4.7-2.7zM32 24a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"/>
+    </svg>''',
+    "llave": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="18" r="9"/>
+        <path d="M24 24l28 28M40 36l6-6M46 42l6-6"/>
+    </svg>''',
+    "escudo": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 6l20 8v16c0 16-12 24-20 28-8-4-20-12-20-28V14z"/>
+        <path d="M24 32l6 6 12-12"/>
+    </svg>''',
+    "rayo": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M36 4L16 36h14l-4 24 22-32H34z" fill="{ICON_COLOR}" fill-opacity="0.15"/>
+    </svg>''',
+    "libro": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 14c-6-4-14-4-22-2v36c8-2 16-2 22 2 6-4 14-4 22-2V12c-8-2-16-2-22 2z"/>
+        <path d="M32 14v36"/>
+    </svg>''',
+    "globo": f'''<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="{ICON_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="32" cy="32" r="22"/>
+        <path d="M10 32h44M32 10c6 6 9 14 9 22s-3 16-9 22c-6-6-9-14-9-22s3-16 9-22z"/>
+        <path d="M15 18c4 3 10 5 17 5s13-2 17-5M15 46c4-3 10-5 17-5s13 2 17 5"/>
+    </svg>''',
+}
+
+ICON_KEYS = list(SVG_ICONS.keys())
 
 # ── Frases rotativas para el spinner (motivacionales/curiosas, tema investigación y tecnología) ──
 SPINNER_QUOTES = [
@@ -207,7 +275,7 @@ SPINNER_QUOTES = [
 ]
 
 if "page_icon" not in st.session_state:
-    st.session_state.page_icon = "🎓"
+    st.session_state.page_icon = "libro"
 if "pending_job" not in st.session_state:
     st.session_state.pending_job = None  # dict: {type, url, nombre_software?}
 if "current_quote" not in st.session_state:
@@ -215,8 +283,8 @@ if "current_quote" not in st.session_state:
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown(
-    f"<div style='text-align:center; font-size: 72px; line-height: 1; margin-bottom: 8px;'>"
-    f"{st.session_state.page_icon}</div>",
+    f"<div style='text-align:center; margin-bottom: 8px;'>"
+    f"{SVG_ICONS[st.session_state.page_icon]}</div>",
     unsafe_allow_html=True,
 )
 st.title("Analizador de Software y Membresías Académicas")
@@ -266,7 +334,7 @@ def run_gemini(prompt_text):
 
 def rotate_icon_and_quote():
     current_icon = st.session_state.page_icon
-    st.session_state.page_icon = random.choice([i for i in ICONS if i != current_icon])
+    st.session_state.page_icon = random.choice([k for k in ICON_KEYS if k != current_icon])
 
     current_quote = st.session_state.current_quote
     st.session_state.current_quote = random.choice([q for q in SPINNER_QUOTES if q != current_quote])
