@@ -189,7 +189,7 @@ Si para algún campo no encuentras información verificable en la página o por 
 
 # ── Iconos SVG estilo cartoon (formas redondeadas, colores planos) ──────────
 SVG_ICONS = {
-    "cohete": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "cohete": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <ellipse cx="50" cy="92" rx="14" ry="4" fill="#FFD9D9"/>
         <path d="M50 10 C65 25 68 50 64 75 L36 75 C32 50 35 25 50 10Z" fill="#FF6B6B"/>
         <path d="M50 10 C58 25 60 50 58 70 L50 70 Z" fill="#FF4B4B"/>
@@ -200,7 +200,7 @@ SVG_ICONS = {
         <path d="M40 75 L60 75 L57 92 L43 92Z" fill="#FF9999"/>
         <path d="M44 75 L42 88 M50 75 L50 90 M56 75 L58 88" stroke="#FF4B4B" stroke-width="2" fill="none"/>
     </svg>''',
-    "robot": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "robot": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <rect x="22" y="35" width="56" height="45" rx="14" fill="#74C0FC"/>
         <rect x="30" y="43" width="40" height="28" rx="8" fill="#FFFFFF"/>
         <circle cx="42" cy="57" r="6" fill="#FF4B4B"/>
@@ -211,20 +211,20 @@ SVG_ICONS = {
         <rect x="10" y="50" width="12" height="8" rx="4" fill="#74C0FC"/>
         <rect x="78" y="50" width="12" height="8" rx="4" fill="#74C0FC"/>
     </svg>''',
-    "lupa": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "lupa": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <circle cx="42" cy="42" r="26" fill="#FFD43B"/>
         <circle cx="42" cy="42" r="18" fill="#FFFFFF"/>
         <rect x="60" y="62" width="14" height="30" rx="7" fill="#FF4B4B" transform="rotate(45 67 77)"/>
         <circle cx="36" cy="36" r="5" fill="#FFD43B" opacity="0.6"/>
     </svg>''',
-    "telescopio": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "telescopio": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <rect x="14" y="36" width="52" height="22" rx="11" fill="#495057" transform="rotate(-18 40 47)"/>
         <circle cx="20" cy="34" r="9" fill="#74C0FC" transform="rotate(-18 40 47)"/>
         <rect x="58" y="40" width="14" height="6" rx="3" fill="#868E96" transform="rotate(-18 40 47)"/>
         <rect x="22" y="62" width="6" height="18" rx="3" fill="#868E96"/>
         <rect x="14" y="80" width="22" height="6" rx="3" fill="#495057"/>
     </svg>''',
-    "adn": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "adn": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <path d="M40 12 C40 28 60 28 60 44 C60 60 40 60 40 76 C40 92 60 92 60 92" fill="none" stroke="#74C0FC" stroke-width="7" stroke-linecap="round"/>
         <path d="M60 12 C60 28 40 28 40 44 C40 60 60 60 60 76 C60 92 40 92 40 92" fill="none" stroke="#FF6B6B" stroke-width="7" stroke-linecap="round"/>
         <circle cx="50" cy="20" r="3.5" fill="#495057"/>
@@ -232,25 +232,25 @@ SVG_ICONS = {
         <circle cx="50" cy="68" r="3.5" fill="#495057"/>
         <circle cx="50" cy="88" r="3.5" fill="#495057"/>
     </svg>''',
-    "planeta": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "planeta": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <circle cx="58" cy="40" r="30" fill="#A5D8FF"/>
         <ellipse cx="58" cy="40" rx="38" ry="11" fill="none" stroke="#FFB84D" stroke-width="5" transform="rotate(-15 58 40)"/>
         <circle cx="48" cy="32" r="4" fill="#FFFFFF" opacity="0.8"/>
         <circle cx="68" cy="48" r="3" fill="#FFFFFF" opacity="0.6"/>
     </svg>''',
-    "foco": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "foco": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <path d="M50 14 C66 14 78 26 78 42 C78 54 71 60 67 65 C64 69 64 74 64 78 L36 78 C36 74 36 69 33 65 C29 60 22 54 22 42 C22 26 34 14 50 14Z" fill="#FFD43B"/>
         <rect x="38" y="78" width="24" height="8" rx="3" fill="#868E96"/>
         <rect x="41" y="87" width="18" height="5" rx="2" fill="#868E96"/>
         <circle cx="50" cy="42" r="10" fill="#FFF3BF"/>
     </svg>''',
-    "brujula": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "brujula": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <circle cx="50" cy="50" r="34" fill="#FFD43B"/>
         <circle cx="50" cy="50" r="26" fill="#FFFFFF"/>
         <path d="M62 38 L52 52 L38 62 L48 48Z" fill="#FF4B4B"/>
         <circle cx="50" cy="50" r="4" fill="#495057"/>
     </svg>''',
-    "engranaje": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "engranaje": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <g fill="#74C0FC">
             <rect x="44" y="10" width="12" height="16" rx="3"/>
             <rect x="44" y="74" width="12" height="16" rx="3"/>
@@ -265,28 +265,28 @@ SVG_ICONS = {
         <circle cx="50" cy="50" r="13" fill="#FFFFFF"/>
         <circle cx="50" cy="50" r="6" fill="#A5D8FF"/>
     </svg>''',
-    "llave": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "llave": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <circle cx="32" cy="32" r="16" fill="#FFD43B"/>
         <circle cx="32" cy="32" r="7" fill="#FFFFFF"/>
         <rect x="40" y="40" width="42" height="9" rx="4" fill="#FFD43B" transform="rotate(45 40 40)"/>
         <rect x="62" y="56" width="9" height="9" rx="2" fill="#FFB84D" transform="rotate(45 62 56)"/>
         <rect x="72" y="66" width="9" height="9" rx="2" fill="#FFB84D" transform="rotate(45 72 66)"/>
     </svg>''',
-    "escudo": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "escudo": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <path d="M50 12 L78 22 L78 46 C78 68 64 80 50 88 C36 80 22 68 22 46 L22 22Z" fill="#74C0FC"/>
         <path d="M50 12 L78 22 L78 46 C78 68 64 80 50 88Z" fill="#4DABF7"/>
         <path d="M38 48 L47 57 L64 38" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>''',
-    "rayo": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "rayo": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <path d="M58 8 L26 56 L46 56 L40 92 L76 42 L54 42Z" fill="#FFD43B"/>
         <path d="M58 8 L46 56 L40 92 L76 42 L54 42Z" fill="#FFB84D"/>
     </svg>''',
-    "libro": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "libro": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <path d="M50 24 C40 16 24 16 16 20 L16 76 C24 72 40 72 50 80 Z" fill="#FF6B6B"/>
         <path d="M50 24 C60 16 76 16 84 20 L84 76 C76 72 60 72 50 80 Z" fill="#FF4B4B"/>
         <line x1="50" y1="24" x2="50" y2="80" stroke="#FFFFFF" stroke-width="2"/>
     </svg>''',
-    "globo": '''<svg viewBox="0 0 100 100" width="64" height="64">
+    "globo": '''<svg viewBox="0 0 100 100" width="110" height="110">
         <circle cx="50" cy="50" r="34" fill="#69DB7C"/>
         <path d="M50 16 C58 28 62 38 62 50 C62 62 58 72 50 84 C42 72 38 62 38 50 C38 38 42 28 50 16Z" fill="#40C057"/>
         <ellipse cx="50" cy="50" rx="34" ry="11" fill="none" stroke="#40C057" stroke-width="3"/>
