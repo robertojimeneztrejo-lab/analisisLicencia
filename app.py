@@ -222,6 +222,12 @@ st.markdown(
     "Analiza proveedores de software, asociaciones con membresías, o genera una ficha "
     "técnica completa de un software específico."
 )
+
+# Placeholder reservado para el spinner + frase mientras se ejecuta un análisis.
+# Se llena más abajo (cuando hay un pending_job) pero se renderiza aquí arriba,
+# justo debajo del subtítulo y antes de las pestañas.
+status_placeholder = st.container()
+
 st.divider()
 
 # ── API Key — solo desde secrets ──────────────────────────────────────────────
@@ -256,13 +262,6 @@ def run_gemini(prompt_text):
 def rotate_icon():
     current = st.session_state.page_icon
     st.session_state.page_icon = random.choice([i for i in ICONS if i != current])
-
-
-def spinner_text(action_text):
-    """Combina el texto de acción con una frase motivacional aleatoria.
-    st.spinner no renderiza Markdown, así que se usa texto plano con un separador."""
-    quote = random.choice(SPINNER_QUOTES)
-    return f"{action_text}  —  {quote}"
 
 
 def render_result(result_text, url, download_name):
@@ -362,21 +361,31 @@ if st.session_state.pending_job:
     st.session_state.pending_job = None
 
     try:
+        ACTION_TEXT = {
+            "software": "🌐 Visitando la página y analizando software...",
+            "membresia": "🌐 Visitando la página y analizando membresía...",
+            "ficha": f"🌐 Generando ficha técnica de {job.get('nombre_software', '')}...",
+        }
+
+        with status_placeholder:
+            quote_slot = st.empty()
+            quote_slot.caption(f"💭 {random.choice(SPINNER_QUOTES)}")
+            with st.spinner(ACTION_TEXT[job["type"]]):
+                if job["type"] == "software":
+                    result_text = run_gemini(PROMPT_SOFTWARE.format(url=job["url"]))
+                elif job["type"] == "membresia":
+                    result_text = run_gemini(PROMPT_MEMBRESIA.format(url=job["url"]))
+                elif job["type"] == "ficha":
+                    result_text = run_gemini(
+                        PROMPT_FICHA_COMPLETA.format(url=job["url"], nombre_software=job["nombre_software"])
+                    )
+            quote_slot.empty()
+
         if job["type"] == "software":
-            with st.spinner(spinner_text("🌐 Visitando la página y analizando software...")):
-                result_text = run_gemini(PROMPT_SOFTWARE.format(url=job["url"]))
             render_result(result_text, job["url"], "reporte_software.md")
-
         elif job["type"] == "membresia":
-            with st.spinner(spinner_text("🌐 Visitando la página y analizando membresía...")):
-                result_text = run_gemini(PROMPT_MEMBRESIA.format(url=job["url"]))
             render_result(result_text, job["url"], "reporte_membresia.md")
-
         elif job["type"] == "ficha":
-            with st.spinner(spinner_text(f"🌐 Generando ficha técnica de {job['nombre_software']}...")):
-                result_text = run_gemini(
-                    PROMPT_FICHA_COMPLETA.format(url=job["url"], nombre_software=job["nombre_software"])
-                )
             render_result(result_text, job["url"], f"ficha_{job['nombre_software'].replace(' ', '_')}.md")
 
     except Exception as e:
