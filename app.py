@@ -259,9 +259,10 @@ def rotate_icon():
 
 
 def spinner_text(action_text):
-    """Combina el texto de acción con una frase motivacional aleatoria."""
+    """Combina el texto de acción con una frase motivacional aleatoria.
+    st.spinner no renderiza Markdown, así que se usa texto plano con un separador."""
     quote = random.choice(SPINNER_QUOTES)
-    return f"{action_text}\n\n💭 *{quote}*"
+    return f"{action_text}  —  {quote}"
 
 
 def render_result(result_text, url, download_name):
