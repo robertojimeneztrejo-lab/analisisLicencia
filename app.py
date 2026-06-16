@@ -190,6 +190,22 @@ Si para algún campo no encuentras información verificable en la página o por 
 # ── Random icon ───────────────────────────────────────────────────────────────
 ICONS = ["🎓", "🔬", "📐", "🖥️", "📊", "🧪", "🏫", "📡", "🧬", "⚗️", "🛰️", "🔭", "📱", "🧮", "💡"]
 
+# ── Frases rotativas para el spinner (motivacionales/curiosas, tema investigación y tecnología) ──
+SPINNER_QUOTES = [
+    "La tecnología es mejor cuando reúne a las personas. — Matt Mullenweg",
+    "La ciencia es una forma de pensar mucho más que un cuerpo de conocimiento. — Carl Sagan",
+    "El primer paso es establecer que algo es posible; después la probabilidad ocurrirá. — Elon Musk",
+    "La innovación distingue a un líder de un seguidor. — Steve Jobs",
+    "No hay datos como los datos. — paráfrasis del mundo de la ingeniería",
+    "Cada gran avance científico empezó con una pregunta incómoda.",
+    "La investigación es ver lo que todos han visto y pensar lo que nadie ha pensado. — Albert Szent-Györgyi",
+    "El conocimiento se duplica cada par de años; aprender a buscarlo bien ya es una ventaja.",
+    "La curiosidad es el motor de todo descubrimiento.",
+    "Detrás de cada software hay una pregunta que alguien decidió resolver.",
+    "Una licencia académica bien usada puede valer más que mil horas de prueba y error.",
+    "La tecnología no resuelve problemas; las personas que la usan bien, sí.",
+]
+
 if "page_icon" not in st.session_state:
     st.session_state.page_icon = "🎓"
 if "pending_job" not in st.session_state:
@@ -240,6 +256,12 @@ def run_gemini(prompt_text):
 def rotate_icon():
     current = st.session_state.page_icon
     st.session_state.page_icon = random.choice([i for i in ICONS if i != current])
+
+
+def spinner_text(action_text):
+    """Combina el texto de acción con una frase motivacional aleatoria."""
+    quote = random.choice(SPINNER_QUOTES)
+    return f"{action_text}\n\n💭 *{quote}*"
 
 
 def render_result(result_text, url, download_name):
@@ -340,17 +362,17 @@ if st.session_state.pending_job:
 
     try:
         if job["type"] == "software":
-            with st.spinner("🌐 Visitando la página y analizando software..."):
+            with st.spinner(spinner_text("🌐 Visitando la página y analizando software...")):
                 result_text = run_gemini(PROMPT_SOFTWARE.format(url=job["url"]))
             render_result(result_text, job["url"], "reporte_software.md")
 
         elif job["type"] == "membresia":
-            with st.spinner("🌐 Visitando la página y analizando membresía..."):
+            with st.spinner(spinner_text("🌐 Visitando la página y analizando membresía...")):
                 result_text = run_gemini(PROMPT_MEMBRESIA.format(url=job["url"]))
             render_result(result_text, job["url"], "reporte_membresia.md")
 
         elif job["type"] == "ficha":
-            with st.spinner(f"🌐 Generando ficha técnica de {job['nombre_software']}..."):
+            with st.spinner(spinner_text(f"🌐 Generando ficha técnica de {job['nombre_software']}...")):
                 result_text = run_gemini(
                     PROMPT_FICHA_COMPLETA.format(url=job["url"], nombre_software=job["nombre_software"])
                 )
