@@ -47,7 +47,13 @@ Siempre respondes en español con formato Markdown claro y visual, usando negrit
 # Modo 1: Software (proveedor de herramientas)
 PROMPT_SOFTWARE = """Analiza la siguiente página web: {url}
 
-Visita el enlace anterior, analiza su contenido y genera un reporte estructurado en formato de FICHA TÉCNICA que identifique exactamente los siguientes 6 puntos:
+Visita el enlace anterior. Si esa página es solo una portada/home con poco detalle, busca dentro
+del MISMO sitio (mismo dominio) las páginas internas relevantes — típicamente con palabras como
+"Academic", "Students", "Licensing", "Pricing", "Download" en la URL o en el menú — y lee también
+esas páginas internas para completar la información. No te quedes solo con la portada si hay
+subpáginas con más detalle disponibles en el mismo dominio.
+
+Analiza el contenido y genera un reporte estructurado en formato de FICHA TÉCNICA que identifique exactamente los siguientes 6 puntos:
 
 1. **Número de softwares que ofrece:** (Cantidad total de herramientas o programas independientes que se promocionan en el sitio).
 2. **Nombre de los softwares:** (Lista con los nombres comerciales de cada uno).
@@ -61,7 +67,13 @@ Presenta la información de forma muy visual, usando negritas y listas con viñe
 # Modo 2: Membresía (asociación / organización)
 PROMPT_MEMBRESIA = """Analiza la siguiente página web: {url}
 
-Visita el enlace anterior, analiza su contenido (asumiendo que se trata de una asociación, organismo o institución que ofrece membresías) y genera un reporte estructurado en formato de FICHA TÉCNICA que identifique exactamente los siguientes puntos:
+Visita el enlace anterior. Si esa página es solo una portada/home con poco detalle, busca dentro
+del MISMO sitio (mismo dominio) las páginas internas relevantes — típicamente con palabras como
+"Membership", "Join", "Member Types", "Dues", "About" en la URL o en el menú — y lee también esas
+páginas internas para completar la información. No te quedes solo con la portada si hay subpáginas
+con más detalle disponibles en el mismo dominio.
+
+Analiza el contenido (asumiendo que se trata de una asociación, organismo o institución que ofrece membresías) y genera un reporte estructurado en formato de FICHA TÉCNICA que identifique exactamente los siguientes puntos:
 
 1. **Nombre de la organización/asociación.**
 2. **Costo de la membresía:** (Indica el precio o rangos de precio según el tipo de membresía, en la moneda en que se publique).
@@ -391,18 +403,24 @@ def _call_gemini_once(prompt_text, thinking_budget=1024):
 def run_gemini(prompt_text, max_retries=2):
     """Llama a Gemini con grounding de Google Search + url_context, con reintentos automáticos.
 
-    Gemini 2.5 Flash con herramientas de grounding activas tiene un bug conocido e
-    intermitente: a veces devuelve finish_reason=STOP con 0 partes de contenido,
-    sin ningún motivo de bloqueo (no es SAFETY, ni MAX_TOKENS, ni RECITATION).
-    Es un fallo aleatorio del lado de la API, así que la mitigación estándar es
-    reintentar la misma petición — casi siempre se resuelve en el 2do o 3er intento.
+    Gemini 2.5 Flash con herramientas de grounding activas puede devolver finish_reason=STOP
+    con 0 partes de contenido, sin ningún motivo de bloqueo (no es SAFETY, ni MAX_TOKENS, ni
+    RECITATION). Esto puede pasar de forma aleatoria (bug intermitente conocido) o de forma
+    consistente para sitios que url_context no logra leer bien (ej. portadas que dependen de
+    JavaScript, redirects raros, o anti-bot). Mitigamos con reintentos variando el thinking_budget,
+    y si todos fallan, un último intento usando SOLO google_search (sin url_context) por si la
+    combinación de ambas herramientas es la que está causando el problema en ese sitio puntual.
     """
     last_finish_reason = None
     last_num_parts = 0
     last_part_types = []
+    budgets = [1024, 2048, 512]  # variar el presupuesto de "pensamiento" entre intentos
 
-    for attempt in range(1, max_retries + 2):  # intento inicial + reintentos
-        extracted_text, finish_reason, num_parts, part_types = _call_gemini_once(prompt_text)
+    attempt = 0
+    for i in range(max_retries + 1):  # intento inicial + reintentos
+        attempt = i + 1
+        budget = budgets[i % len(budgets)]
+        extracted_text, finish_reason, num_parts, part_types = _call_gemini_once(prompt_text, thinking_budget=budget)
         last_finish_reason, last_num_parts, last_part_types = finish_reason, num_parts, part_types
 
         if extracted_text:
@@ -422,8 +440,10 @@ def run_gemini(prompt_text, max_retries=2):
         raise ValueError(f"Gemini detectó posible contenido protegido en la página. {debug_info}")
     else:
         raise ValueError(
-            f"Gemini no devolvió texto tras {attempt} intento(s) — es un fallo intermitente conocido "
-            f"de la API con búsqueda activada. {debug_info} Vuelve a intentarlo en unos segundos."
+            f"Gemini no devolvió texto tras {attempt} intento(s). Esto suele pasar cuando el sitio "
+            f"tiene protección anti-bot o redirecciones que bloquean la lectura directa. "
+            f"{debug_info} Intenta con una sub-URL más específica del sitio (ej. la página exacta "
+            f"de membresía/licencias en vez de la portada) o vuelve a intentarlo en unos segundos."
         )
 
 
