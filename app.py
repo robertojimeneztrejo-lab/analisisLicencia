@@ -340,8 +340,11 @@ if not api_key:
 
 
 def run_gemini(prompt_text):
-    """Llama a Gemini con grounding de Google Search y devuelve el texto de respuesta.
-    Lanza un error descriptivo si la respuesta viene vacía, bloqueada o truncada."""
+    """Llama a Gemini con grounding de Google Search + url_context y devuelve el texto de respuesta.
+    Extrae el texto manualmente desde las parts del candidato, ya que el shortcut
+    response.text puede devolver None cuando hay partes intermedias de uso de herramientas
+    (url_context / google_search) aunque el texto final sí exista en el candidato.
+    """
     client = genai.Client(api_key=api_key)
     # url_context permite leer directamente el contenido de la URL dada (fetch real),
     # mientras que google_search complementa con búsquedas relacionadas si falta info.
@@ -359,15 +362,24 @@ def run_gemini(prompt_text):
         config=config,
     )
 
-    # response.text puede ser None si no hubo candidatos, si se bloqueó por
-    # seguridad, o si se truncó antes de producir texto. Diagnosticamos el motivo.
     if not response.candidates:
         raise ValueError("Gemini no devolvió ningún resultado para esta página (sin candidatos).")
 
     candidate = response.candidates[0]
     finish_reason = getattr(candidate, "finish_reason", None)
 
-    if response.text is None:
+    # Extracción manual: concatenar todos los fragmentos de texto en las parts del candidato.
+    extracted_text = ""
+    if candidate.content and candidate.content.parts:
+        for part in candidate.content.parts:
+            if getattr(part, "text", None):
+                extracted_text += part.text
+
+    if not extracted_text:
+        # Fallback al shortcut, por si acaso
+        extracted_text = response.text or ""
+
+    if not extracted_text:
         if finish_reason and "SAFETY" in str(finish_reason):
             raise ValueError("La respuesta fue bloqueada por los filtros de seguridad de Gemini.")
         elif finish_reason and "MAX_TOKENS" in str(finish_reason):
@@ -377,7 +389,7 @@ def run_gemini(prompt_text):
         else:
             raise ValueError(f"Gemini no devolvió texto (finish_reason: {finish_reason}). Intenta con otra URL o vuelve a intentarlo.")
 
-    return response.text
+    return extracted_text
 
 
 def rotate_icon_and_quote():
