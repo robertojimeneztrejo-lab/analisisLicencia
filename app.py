@@ -354,7 +354,10 @@ def run_gemini(prompt_text):
         system_instruction=SYSTEM_PROMPT,
         tools=[url_context_tool, grounding_tool],
         temperature=0.3,
-        max_output_tokens=6000,
+        max_output_tokens=8000,
+        # Limitamos el "pensamiento" interno para que no consuma todo el presupuesto
+        # de tokens antes de llegar a generar el texto final visible.
+        thinking_config=types.ThinkingConfig(thinking_budget=1024),
     )
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -370,24 +373,35 @@ def run_gemini(prompt_text):
 
     # Extracción manual: concatenar todos los fragmentos de texto en las parts del candidato.
     extracted_text = ""
+    num_parts = 0
+    part_types = []
     if candidate.content and candidate.content.parts:
+        num_parts = len(candidate.content.parts)
         for part in candidate.content.parts:
             if getattr(part, "text", None):
                 extracted_text += part.text
+                part_types.append("text")
+            elif getattr(part, "function_call", None):
+                part_types.append("function_call")
+            elif getattr(part, "executable_code", None):
+                part_types.append("executable_code")
+            else:
+                part_types.append("other")
 
     if not extracted_text:
         # Fallback al shortcut, por si acaso
         extracted_text = response.text or ""
 
     if not extracted_text:
+        debug_info = f"(finish_reason: {finish_reason}, partes: {num_parts} {part_types})"
         if finish_reason and "SAFETY" in str(finish_reason):
-            raise ValueError("La respuesta fue bloqueada por los filtros de seguridad de Gemini.")
+            raise ValueError(f"La respuesta fue bloqueada por los filtros de seguridad de Gemini. {debug_info}")
         elif finish_reason and "MAX_TOKENS" in str(finish_reason):
-            raise ValueError("La respuesta se cortó por exceder el límite de tokens. Intenta de nuevo o reduce el alcance del análisis.")
+            raise ValueError(f"La respuesta se cortó por exceder el límite de tokens. Intenta de nuevo. {debug_info}")
         elif finish_reason and "RECITATION" in str(finish_reason):
-            raise ValueError("Gemini detectó posible contenido protegido en la página y no generó texto.")
+            raise ValueError(f"Gemini detectó posible contenido protegido en la página. {debug_info}")
         else:
-            raise ValueError(f"Gemini no devolvió texto (finish_reason: {finish_reason}). Intenta con otra URL o vuelve a intentarlo.")
+            raise ValueError(f"Gemini no devolvió texto. {debug_info} Intenta con otra URL o vuelve a intentarlo.")
 
     return extracted_text
 
