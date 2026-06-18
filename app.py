@@ -31,7 +31,17 @@ st.markdown("""
 
 # ── Prompts ───────────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = """Eres un analista experto en software académico y membresías institucionales.
-Cuando el usuario te proporciona una URL, visitas esa página web y analizas su contenido en profundidad.
+Tienes dos herramientas: una para leer directamente el contenido de la URL que te da el usuario (url_context),
+y otra de búsqueda web (google_search) para complementar con información adicional si la página
+no tiene todo el detalle necesario (por ejemplo, búscando el nombre de la organización + "membership types",
+"pricing", "join", etc.).
+
+Usa SIEMPRE primero la lectura directa de la URL proporcionada. Si esa página no contiene algún dato
+específico, usa la búsqueda web para completarlo en vez de rendirte. Solo si después de ambos intentos
+no encuentras un dato, indica "No especificado" en ESE campo puntual — nunca abandones el reporte completo
+por no encontrar uno o dos datos. Siempre entrega los 6-8 puntos solicitados con el formato pedido,
+aunque algunos campos queden como "No especificado".
+
 Siempre respondes en español con formato Markdown claro y visual, usando negritas y listas con viñetas."""
 
 # Modo 1: Software (proveedor de herramientas)
@@ -333,10 +343,13 @@ def run_gemini(prompt_text):
     """Llama a Gemini con grounding de Google Search y devuelve el texto de respuesta.
     Lanza un error descriptivo si la respuesta viene vacía, bloqueada o truncada."""
     client = genai.Client(api_key=api_key)
+    # url_context permite leer directamente el contenido de la URL dada (fetch real),
+    # mientras que google_search complementa con búsquedas relacionadas si falta info.
     grounding_tool = types.Tool(google_search=types.GoogleSearch())
+    url_context_tool = types.Tool(url_context=types.UrlContext())
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_PROMPT,
-        tools=[grounding_tool],
+        tools=[url_context_tool, grounding_tool],
         temperature=0.3,
         max_output_tokens=6000,
     )
