@@ -339,15 +339,12 @@ if not api_key:
     st.stop()
 
 
-def run_gemini(prompt_text):
-    """Llama a Gemini con grounding de Google Search + url_context y devuelve el texto de respuesta.
-    Extrae el texto manualmente desde las parts del candidato, ya que el shortcut
-    response.text puede devolver None cuando hay partes intermedias de uso de herramientas
-    (url_context / google_search) aunque el texto final sí exista en el candidato.
-    """
+def _call_gemini_once(prompt_text, thinking_budget=1024):
+    """Hace una sola llamada a Gemini con grounding + url_context.
+    Devuelve (texto_extraido, finish_reason, num_parts, part_types).
+    texto_extraido puede ser "" si la llamada no produjo contenido (caso conocido
+    e intermitente de Gemini 2.5 Flash con herramientas de grounding activas)."""
     client = genai.Client(api_key=api_key)
-    # url_context permite leer directamente el contenido de la URL dada (fetch real),
-    # mientras que google_search complementa con búsquedas relacionadas si falta info.
     grounding_tool = types.Tool(google_search=types.GoogleSearch())
     url_context_tool = types.Tool(url_context=types.UrlContext())
     config = types.GenerateContentConfig(
@@ -355,9 +352,7 @@ def run_gemini(prompt_text):
         tools=[url_context_tool, grounding_tool],
         temperature=0.3,
         max_output_tokens=8000,
-        # Limitamos el "pensamiento" interno para que no consuma todo el presupuesto
-        # de tokens antes de llegar a generar el texto final visible.
-        thinking_config=types.ThinkingConfig(thinking_budget=1024),
+        thinking_config=types.ThinkingConfig(thinking_budget=thinking_budget),
     )
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -366,12 +361,11 @@ def run_gemini(prompt_text):
     )
 
     if not response.candidates:
-        raise ValueError("Gemini no devolvió ningún resultado para esta página (sin candidatos).")
+        return "", None, 0, []
 
     candidate = response.candidates[0]
     finish_reason = getattr(candidate, "finish_reason", None)
 
-    # Extracción manual: concatenar todos los fragmentos de texto en las parts del candidato.
     extracted_text = ""
     num_parts = 0
     part_types = []
@@ -389,21 +383,48 @@ def run_gemini(prompt_text):
                 part_types.append("other")
 
     if not extracted_text:
-        # Fallback al shortcut, por si acaso
         extracted_text = response.text or ""
 
-    if not extracted_text:
-        debug_info = f"(finish_reason: {finish_reason}, partes: {num_parts} {part_types})"
-        if finish_reason and "SAFETY" in str(finish_reason):
-            raise ValueError(f"La respuesta fue bloqueada por los filtros de seguridad de Gemini. {debug_info}")
-        elif finish_reason and "MAX_TOKENS" in str(finish_reason):
-            raise ValueError(f"La respuesta se cortó por exceder el límite de tokens. Intenta de nuevo. {debug_info}")
-        elif finish_reason and "RECITATION" in str(finish_reason):
-            raise ValueError(f"Gemini detectó posible contenido protegido en la página. {debug_info}")
-        else:
-            raise ValueError(f"Gemini no devolvió texto. {debug_info} Intenta con otra URL o vuelve a intentarlo.")
+    return extracted_text, finish_reason, num_parts, part_types
 
-    return extracted_text
+
+def run_gemini(prompt_text, max_retries=2):
+    """Llama a Gemini con grounding de Google Search + url_context, con reintentos automáticos.
+
+    Gemini 2.5 Flash con herramientas de grounding activas tiene un bug conocido e
+    intermitente: a veces devuelve finish_reason=STOP con 0 partes de contenido,
+    sin ningún motivo de bloqueo (no es SAFETY, ni MAX_TOKENS, ni RECITATION).
+    Es un fallo aleatorio del lado de la API, así que la mitigación estándar es
+    reintentar la misma petición — casi siempre se resuelve en el 2do o 3er intento.
+    """
+    last_finish_reason = None
+    last_num_parts = 0
+    last_part_types = []
+
+    for attempt in range(1, max_retries + 2):  # intento inicial + reintentos
+        extracted_text, finish_reason, num_parts, part_types = _call_gemini_once(prompt_text)
+        last_finish_reason, last_num_parts, last_part_types = finish_reason, num_parts, part_types
+
+        if extracted_text:
+            return extracted_text
+
+        # Si fue un bloqueo real (no el bug de respuesta vacía), no tiene sentido reintentar igual.
+        if finish_reason and any(r in str(finish_reason) for r in ("SAFETY", "RECITATION")):
+            break
+
+    # Se agotaron los intentos sin obtener texto.
+    debug_info = f"(finish_reason: {last_finish_reason}, partes: {last_num_parts} {last_part_types}, intentos: {attempt})"
+    if last_finish_reason and "SAFETY" in str(last_finish_reason):
+        raise ValueError(f"La respuesta fue bloqueada por los filtros de seguridad de Gemini. {debug_info}")
+    elif last_finish_reason and "MAX_TOKENS" in str(last_finish_reason):
+        raise ValueError(f"La respuesta se cortó por exceder el límite de tokens. {debug_info}")
+    elif last_finish_reason and "RECITATION" in str(last_finish_reason):
+        raise ValueError(f"Gemini detectó posible contenido protegido en la página. {debug_info}")
+    else:
+        raise ValueError(
+            f"Gemini no devolvió texto tras {attempt} intento(s) — es un fallo intermitente conocido "
+            f"de la API con búsqueda activada. {debug_info} Vuelve a intentarlo en unos segundos."
+        )
 
 
 def rotate_icon_and_quote():
