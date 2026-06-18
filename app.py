@@ -1,7 +1,9 @@
 import streamlit as st
 from google import genai
 from google.genai import types
+from google.genai import errors as genai_errors
 import random
+import time
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -420,7 +422,22 @@ def run_gemini(prompt_text, max_retries=2):
     for i in range(max_retries + 1):  # intento inicial + reintentos
         attempt = i + 1
         budget = budgets[i % len(budgets)]
-        extracted_text, finish_reason, num_parts, part_types = _call_gemini_once(prompt_text, thinking_budget=budget)
+
+        try:
+            extracted_text, finish_reason, num_parts, part_types = _call_gemini_once(prompt_text, thinking_budget=budget)
+        except genai_errors.ServerError as server_err:
+            # Errores 5xx (ej. 503 UNAVAILABLE por alta demanda) son temporales del lado de
+            # Google. Reintentamos con una breve espera, salvo que sea el último intento.
+            last_finish_reason = f"ServerError: {server_err}"
+            if i < max_retries:
+                time.sleep(2 * (i + 1))  # backoff progresivo: 2s, 4s, ...
+                continue
+            else:
+                raise ValueError(
+                    f"Los servidores de Gemini están saturados (503 UNAVAILABLE) tras {attempt} intentos. "
+                    f"Espera unos segundos y vuelve a intentarlo."
+                )
+
         last_finish_reason, last_num_parts, last_part_types = finish_reason, num_parts, part_types
 
         if extracted_text:
@@ -477,6 +494,8 @@ def handle_error(e):
         st.error("❌ Cuota de API excedida. Intenta más tarde o revisa tu plan en Google AI Studio.")
     elif "404" in err and "NOT_FOUND" in err:
         st.error("❌ El modelo de Gemini usado ya no está disponible. Contacta al desarrollador para actualizar el código.")
+    elif "503" in err and ("UNAVAILABLE" in err or "high demand" in err.lower() or "saturados" in err.lower()):
+        st.error("⏳ Los servidores de Gemini están saturados por alta demanda en este momento (no es un problema de tu configuración). Espera unos segundos y vuelve a intentarlo.")
     elif "bloqueada por los filtros de seguridad" in err:
         st.error("❌ La página no pudo analizarse: Gemini bloqueó la respuesta por sus filtros de seguridad. Intenta con otra URL.")
     elif "se cortó por exceder el límite" in err:
@@ -484,7 +503,7 @@ def handle_error(e):
     elif "contenido protegido" in err:
         st.error("❌ Gemini no pudo generar el reporte porque detectó posible contenido protegido en la página. Intenta con otra URL.")
     elif "no devolvió" in err.lower() or "sin candidatos" in err.lower():
-        st.error(f"❌ {err} Vuelve a intentarlo — a veces es un fallo temporal de la API.")
+        st.error(f"❌ {err}")
     else:
         st.error(f"❌ Error al analizar: {err}")
 
