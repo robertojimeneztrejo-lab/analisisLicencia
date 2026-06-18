@@ -330,20 +330,40 @@ if not api_key:
 
 
 def run_gemini(prompt_text):
-    """Llama a Gemini con grounding de Google Search y devuelve el texto de respuesta."""
+    """Llama a Gemini con grounding de Google Search y devuelve el texto de respuesta.
+    Lanza un error descriptivo si la respuesta viene vacía, bloqueada o truncada."""
     client = genai.Client(api_key=api_key)
     grounding_tool = types.Tool(google_search=types.GoogleSearch())
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_PROMPT,
         tools=[grounding_tool],
         temperature=0.3,
-        max_output_tokens=3000,
+        max_output_tokens=6000,
     )
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt_text,
         config=config,
     )
+
+    # response.text puede ser None si no hubo candidatos, si se bloqueó por
+    # seguridad, o si se truncó antes de producir texto. Diagnosticamos el motivo.
+    if not response.candidates:
+        raise ValueError("Gemini no devolvió ningún resultado para esta página (sin candidatos).")
+
+    candidate = response.candidates[0]
+    finish_reason = getattr(candidate, "finish_reason", None)
+
+    if response.text is None:
+        if finish_reason and "SAFETY" in str(finish_reason):
+            raise ValueError("La respuesta fue bloqueada por los filtros de seguridad de Gemini.")
+        elif finish_reason and "MAX_TOKENS" in str(finish_reason):
+            raise ValueError("La respuesta se cortó por exceder el límite de tokens. Intenta de nuevo o reduce el alcance del análisis.")
+        elif finish_reason and "RECITATION" in str(finish_reason):
+            raise ValueError("Gemini detectó posible contenido protegido en la página y no generó texto.")
+        else:
+            raise ValueError(f"Gemini no devolvió texto (finish_reason: {finish_reason}). Intenta con otra URL o vuelve a intentarlo.")
+
     return response.text
 
 
@@ -377,6 +397,14 @@ def handle_error(e):
         st.error("❌ Cuota de API excedida. Intenta más tarde o revisa tu plan en Google AI Studio.")
     elif "404" in err and "NOT_FOUND" in err:
         st.error("❌ El modelo de Gemini usado ya no está disponible. Contacta al desarrollador para actualizar el código.")
+    elif "bloqueada por los filtros de seguridad" in err:
+        st.error("❌ La página no pudo analizarse: Gemini bloqueó la respuesta por sus filtros de seguridad. Intenta con otra URL.")
+    elif "se cortó por exceder el límite" in err:
+        st.error("❌ La respuesta fue demasiado larga y se cortó. Vuelve a intentarlo — a veces Gemini la genera más corta en el siguiente intento.")
+    elif "contenido protegido" in err:
+        st.error("❌ Gemini no pudo generar el reporte porque detectó posible contenido protegido en la página. Intenta con otra URL.")
+    elif "no devolvió" in err.lower() or "sin candidatos" in err.lower():
+        st.error(f"❌ {err} Vuelve a intentarlo — a veces es un fallo temporal de la API.")
     else:
         st.error(f"❌ Error al analizar: {err}")
 
